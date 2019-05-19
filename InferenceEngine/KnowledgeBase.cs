@@ -6,16 +6,12 @@ namespace InferenceEngine
 {
     public class KnowledgeBase
     {
-        public List<string> Facts
+        public List<Clause> Clauses
         {
             get;
-            set;
-        } = new List<string>();
-        public List<string> Clauses
-        {
-            get;
-            set;
-        } = new List<string>();
+            private set;
+        } = new List<Clause>();
+
         public string Query
         {
             get;
@@ -40,6 +36,7 @@ namespace InferenceEngine
             try
             {
                 string line = reader.ReadLine();
+                string clauseLine = "";
                 //read the file in order, line by line
                 //all files must start with TELL, signalling the knowledgebase.
                 if (line != "TELL")
@@ -54,24 +51,7 @@ namespace InferenceEngine
                     {
                         line = line.Remove(line.Length - 1); //Remove the final ; at the end of the list of clauses/facts 
                     }
-                    string[] splitString = line.Split(';');
-                    foreach (string s in splitString)
-                    {
-                        clauses.Add(s);
-                    }
-
-                    for (int i = 0; i < clauses.Count; i++)
-                    {
-                        if (clauses[i].Contains("=>"))
-                        {
-                            //These are statements where "if A is true, B is true" or "if A and B are true, C is true"
-                            Clauses.Add(clauses[i]);
-                        }
-                        else
-                        {
-                            Facts.Add(clauses[i]);
-                        }
-                    }
+                    clauseLine = line; //Save this data and move on
                 }
 
                 //Now the "TELL" section should have been completed, we can do the "ASK" section
@@ -85,6 +65,18 @@ namespace InferenceEngine
                     line = reader.ReadLine();
 
                     Query = line;
+
+                    //now we know what the query is we can convert the string clauses into objects
+                    string[] splitString = clauseLine.Split(';');
+                    foreach (string s in splitString)
+                    {
+                        clauses.Add(s);
+                    }
+
+                    for (int i = 0; i < clauses.Count; i++)
+                    {
+                        Clauses.Add(new Clause(clauses[i], Query));
+                    }
                 }
             }
             finally

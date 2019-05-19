@@ -1,97 +1,174 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace InferenceEngine
 {
     public class TruthTable
     {
-        public List<Element> Elements
+        private KnowledgeBase _kb;
+
+        public int QueryResults
         {
             get;
-            set;
-        } = new List<Element>();
-
-        public TruthTable(KnowledgeBase kb)
-        {
-            EvaluateClause(kb.Clauses[0]);
+            private set;
         }
 
-        public List<Element> FindElements(string clause)
+        public string OutputQueryResult()
         {
-            string[] dividedclauses = Regex.Split(clause, "=>");
-            List<Element> result = new List<Element>();
+            string result;
 
-            //Go through all of the strings passed to the method to start comparison
-            int count = 1;
-            foreach (string s in dividedclauses)
+            if(QueryResults > 0)
             {
-                //Need to further expand this by checking for OR statements and for elements within brackets (as these may be provided as elements to be made into a truth table)
-                //Check if this statement contains one or two elements
-                if (s.Contains("&"))
-                {
-                    string[] conditionals = s.Split('&');
-                    foreach (string c in conditionals)
-                    {
-                        if (!result.Any(q => q.Name == c))
-                        {
-                            result.Add(new Element(c, count, true));
-                            count *= 2;
-                        }
-                    }
-                }
-                else
-                {
-                    if (!result.Any(q => q.Name == s))
-                    {
-                        result.Add(new Element(s, count, true));
-                        count *= 2;
-                    }
-                }
+                result = "YES (" + _kb.Query + "): " + QueryResults.ToString();
+            }
+            else
+            {
+                result = "NO (" + _kb.Query + ")";
             }
 
             return result;
         }
 
-        public void EvaluateClause(string clause)
+        public TruthTable(KnowledgeBase kb)
         {
-            List<Element> clauseElements = FindElements(clause);
+            //Counter for the number of states where the ASK section returns true
+            QueryResults = 0;
+            _kb = kb;
 
-            Console.WriteLine("=========================================");
-            for (int i = 1; i < Math.Pow(2, clauseElements.Count()) + 1; i++)
+            foreach (Clause c in kb.Clauses)
             {
-                for (int j = clauseElements.Count - 1; j >= 0; j--)
-                {
-                    //If the remainder of i divided by the significant bit value of the variable is equal to 1, or if the significant bit is already equal to 1, swap the states.
-                    if ((i%clauseElements[j].SignificantBit == 1) || clauseElements[j].SignificantBit == 1)
-                    {
-                        clauseElements[j].SetState();
-                    }
-
-                    //Represents the state boolean as a string (so it can be printed to the console!)
-                    if (clauseElements[j].State == true)
-                    {
-                        Console.Write(" | 1");
-                    }
-                    else
-                    {
-                        Console.Write(" | 0");
-                    }
-                }
-
-                //Now we have printed all elements in each state, we can calculate the resulting outcome (depending on the current state of each element in that line)
-                Console.Write(" || ");
-                ProvideOutput(clauseElements);
-                Console.Write(Environment.NewLine);
+                EvaluateClause(c);
+                Debug.WriteLine("");
             }
         }
 
-        public void ProvideOutput(List<Element> clauseElements)
+        public void EvaluateClause(Clause clause)
         {
-            
+            //Write all of the elements within the truth table so we know what variables are involved
+            #region
+            string elements = "";
+            string breakerLine = "";
+
+            Debug.WriteLine(clause.ToString());
+            foreach (Element e in clause.Elements)
+            {
+                if (elements == "")
+                {
+                    if (e.Name.Length > 1)
+                    {
+                        elements = " |" + e.Name;
+                    }
+                    else
+                    {
+                        elements = " | " + e.Name;
+                    }
+                }
+                else
+                {
+                    if (e.Name.Length > 1)
+                    {
+                        elements += " |" + e.Name;
+                    }
+                    else
+                    {
+                        elements += " | " + e.Name;
+                    }
+                }
+
+                for (int i = 0; i < e.Name.Length; i++)
+                {
+                    breakerLine += "=";
+                }
+                breakerLine += "====";
+            }
+            breakerLine += "======";
+            Debug.WriteLine(elements + " || RESULT");
+            Debug.WriteLine(breakerLine);
+            #endregion
+
+            //Now write all states of the elements within the clause
+            for (int i = 1; i < Math.Pow(2, clause.ElementsCount) + 1; i++)
+            {
+                for (int j = clause.ElementsCount - 1; j >= 0; j--)
+                {
+                    //If the remainder of i divided by the significant bit value of the variable is equal to 1, or if the significant bit is already equal to 1, swap the states.
+                    if (i%clause.Elements[j].SignificantBit == 1 || clause.Elements[j].SignificantBit == 1)
+                    {
+                        clause.Elements[j].SetState();
+                    }
+
+                }
+
+                //Now we have printed all elements in each state, we can calculate the resulting outcome (depending on the current state of each element in that line)
+                foreach(Element e in clause.Elements)
+                {
+                    Debug.Write(" | " + e.ToString());
+                }
+
+                Debug.Write(" || ");
+                
+                bool outputResult = ProvideOutput(clause);
+                if(outputResult)
+                {
+                    Debug.Write("T");
+                    if(clause.ContainsASK)
+                    {
+                        if(clause.ElementsCount == 2 && clause.Elements[1].Name == _kb.Query)
+                        {
+                            QueryResults++;
+                        }
+                        else if (clause.ElementsCount == 3 && clause.Elements[2].Name == _kb.Query)
+                        {
+                            QueryResults++;
+                        }
+                        //Since this state results in true and contains the ASK statement
+                        
+                    }
+                }
+                else
+                {
+                    Debug.Write("F");
+                }
+
+                Debug.Write(Environment.NewLine);
+            }
+        }
+
+        public bool ProvideOutput(Clause clause)
+        {
+            if (clause.IsFact)
+            {
+                if (clause.Elements[0].State)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (clause.ContainsImplication)
+                {
+                    if (clause.ContainsConjunction)
+                    {
+                        //The clause is a ^ b -> c
+                        return clause.CalculateConjunctionAndImplication();
+                    }
+                    else
+                    {
+                        //The clause is a -> b
+                        return clause.CalculateImplication();
+                    }
+                }
+                else
+                {
+                    //The clause is a ^ b
+                    return clause.CalculateConjunction();
+                }
+            }
+
+            return false; //unless explicitly stated we can assume the result is false
         }
     }
 }

@@ -37,5 +37,20 @@ namespace InferenceEngine
         {
             State = !State;
         }
+
+        public override string ToString()
+        {
+            if (State)
+            {
+                return "T";
+            }
+            
+            if (!State)
+            {
+                return "F";
+            }
+
+            return "NULL";
+        }
     }
 }

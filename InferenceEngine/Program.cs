@@ -27,6 +27,9 @@ namespace InferenceEngine
             {
                 kb = new KnowledgeBase(fileDir);
                 testTruth = new TruthTable(kb);
+
+                Console.WriteLine(testTruth.OutputQueryResult());
+                Console.ReadLine();
             }
         }
     }
