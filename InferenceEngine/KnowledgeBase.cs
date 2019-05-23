@@ -12,6 +12,12 @@ namespace InferenceEngine
             private set;
         } = new List<Clause>();
 
+        public List<string> Facts //Can represent as strings since we're only using them for comparison
+        {
+            get;
+            private set;
+        } = new List<string>();
+
         public string Query
         {
             get;
@@ -21,6 +27,8 @@ namespace InferenceEngine
         public KnowledgeBase(string fileName)
         {
             LoadFile(fileName);
+
+            EstablishFacts();
         }
 
         private void LoadFile(string fileName)
@@ -30,7 +38,6 @@ namespace InferenceEngine
             //p2 => p3; p3 => p1; c => e; b & e => f; f & g => h; p1 => d; p1 & p3 => c; a; b; p2;
             //ASK
             //d
-            List<string> clauses = new List<string>();
 
             StreamReader reader = new StreamReader(fileName);
             try
@@ -62,6 +69,7 @@ namespace InferenceEngine
                 }
                 else
                 {
+                    List<string> clauses = new List<string>();
                     line = reader.ReadLine();
 
                     Query = line;
@@ -82,6 +90,21 @@ namespace InferenceEngine
             finally
             {
                 reader.Close();
+            }
+        }
+
+        private void EstablishFacts()
+        {
+            //We want to find all clauses that are facts and make all elements that are facts be placed on a list
+            foreach (Clause c in Clauses)
+            {
+                if(c.IsFact)
+                {
+                    if(!Facts.Contains(c.Elements[0].Name))
+                    {
+                        Facts.Add(c.Elements[0].Name);
+                    }
+                }
             }
         }
     }

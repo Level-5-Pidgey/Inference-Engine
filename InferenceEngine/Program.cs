@@ -29,7 +29,6 @@ namespace InferenceEngine
                 testTruth = new TruthTable(kb);
 
                 Console.WriteLine(testTruth.OutputQueryResult());
-                Console.ReadLine();
             }
         }
     }

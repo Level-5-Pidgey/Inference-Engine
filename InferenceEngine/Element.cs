@@ -20,16 +20,16 @@ namespace InferenceEngine
             set;
         }
 
-        public int SignificantBit
+        public bool IsImplied
         {
             get;
             set;
         }
 
-        public Element(string name, int significantBit, bool state)
+        public Element(string name, bool state = false, bool implied = false)
         {
             Name = name;
-            SignificantBit = significantBit;
+            IsImplied = implied;
             State = state;
         }
 
@@ -40,17 +40,7 @@ namespace InferenceEngine
 
         public override string ToString()
         {
-            if (State)
-            {
-                return "T";
-            }
-            
-            if (!State)
-            {
-                return "F";
-            }
-
-            return "NULL";
+            return Name + " : " + State.ToString(); 
         }
     }
 }

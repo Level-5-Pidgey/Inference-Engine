@@ -9,8 +9,11 @@ namespace InferenceEngine
     public class TruthTable
     {
         private KnowledgeBase _kb;
+        private List<Element> _uniqueElements;
+        private List<List<Element>> _stateGrid = new List<List<Element>>();
+        private List<bool> _modelResult = new List<bool>();
 
-        public int QueryResults
+        public int ASKCount
         {
             get;
             private set;
@@ -20,9 +23,9 @@ namespace InferenceEngine
         {
             string result;
 
-            if(QueryResults > 0)
+            if(ASKCount > 0)
             {
-                result = "YES (" + _kb.Query + "): " + QueryResults.ToString();
+                result = "YES (" + _kb.Query + "): " + ASKCount.ToString();
             }
             else
             {
@@ -35,140 +38,120 @@ namespace InferenceEngine
         public TruthTable(KnowledgeBase kb)
         {
             //Counter for the number of states where the ASK section returns true
-            QueryResults = 0;
+            ASKCount = 0;
             _kb = kb;
+            _uniqueElements = ProvideUniqueElements(kb.Clauses);
 
-            foreach (Clause c in kb.Clauses)
+            PopulateTruthTable();
+            EvaluateStates();
+        }
+
+        private void PopulateTruthTable()
+        {
+            for(int i = 0; i < Math.Pow(2, _uniqueElements.Count); i++)
             {
-                EvaluateClause(c);
-                Debug.WriteLine("");
+                //Add one new row for each element there is in the knowledgebase
+                _stateGrid.Add(new List<Element>());
+                _modelResult.Add(true); //To start, we can assume each outcome is true (and will change these to false later when evaluating states)
+
+                for (int j = 0; j < _uniqueElements.Count; j++)
+                {
+                    //Credit to Dhass on this CareerCup post on how to populate truth table grids easily:
+                    //https://www.careercup.com/question?id=17632666
+
+                    int k = i & 1 << _uniqueElements.Count - 1 - j;
+
+                    _stateGrid[i].Add(new Element(_uniqueElements[j].Name, (k == 0 ? true : false)));
+                }
             }
         }
 
-        public void EvaluateClause(Clause clause)
+        private void EvaluateStates()
         {
-            //Write all of the elements within the truth table so we know what variables are involved
-            #region
-            string elements = "";
-            string breakerLine = "";
-
-            Debug.WriteLine(clause.ToString());
-            foreach (Element e in clause.Elements)
+            //Check the state of all elements in each potential model
+            for (int i = 0; i < Math.Pow(2, _uniqueElements.Count); i++)
             {
-                if (elements == "")
+                for(int j = 0; j < _uniqueElements.Count; j++)
                 {
-                    if (e.Name.Length > 1)
+                    if(_modelResult[i]) //This lets us skip models that we have evaluated to false
                     {
-                        elements = " |" + e.Name;
-                    }
-                    else
-                    {
-                        elements = " | " + e.Name;
-                    }
-                }
-                else
-                {
-                    if (e.Name.Length > 1)
-                    {
-                        elements += " |" + e.Name;
-                    }
-                    else
-                    {
-                        elements += " | " + e.Name;
-                    }
-                }
+                        if((_stateGrid[i][j].Name == _kb.Query) && (!_stateGrid[i][j].State)) //is this element within the grid the query?
+                        {
+                            _modelResult[i] = false; //If the ASK element is false, the model cannot be true/optimal
 
-                for (int i = 0; i < e.Name.Length; i++)
-                {
-                    breakerLine += "=";
+                            break; //Now we know this model is not optimal we can move on and skip evaluating the rest of the elements in this model
+                        }
+                    }
                 }
-                breakerLine += "====";
             }
-            breakerLine += "======";
-            Debug.WriteLine(elements + " || RESULT");
-            Debug.WriteLine(breakerLine);
-            #endregion
 
-            //Now write all states of the elements within the clause
-            for (int i = 1; i < Math.Pow(2, clause.ElementsCount) + 1; i++)
+            for (int i = 0; i < Math.Pow(2, _uniqueElements.Count); i++)
             {
-                for (int j = clause.ElementsCount - 1; j >= 0; j--)
+                if (_modelResult[i])
                 {
-                    //If the remainder of i divided by the significant bit value of the variable is equal to 1, or if the significant bit is already equal to 1, swap the states.
-                    if (i%clause.Elements[j].SignificantBit == 1 || clause.Elements[j].SignificantBit == 1)
+                    //Within this model we want to:
+                    //Set the elements within the clause to match the states in the current model
+                    //Then, evaluate the clause and see if it results in a truth
+                    //if the result is false, change _modelResult[i] to false also
+                    //After iterating through the list, any models where the query element is true can be left true
+
+                    foreach (Clause c in _kb.Clauses)
                     {
-                        clause.Elements[j].SetState();
+                        c.MatchStates(_stateGrid[i]);
+                        c.ResolveClauseStates();
                     }
 
-                }
-
-                //Now we have printed all elements in each state, we can calculate the resulting outcome (depending on the current state of each element in that line)
-                foreach(Element e in clause.Elements)
-                {
-                    Debug.Write(" | " + e.ToString());
-                }
-
-                Debug.Write(" || ");
-                
-                bool outputResult = ProvideOutput(clause);
-                if(outputResult)
-                {
-                    Debug.Write("T");
-                    if(clause.ContainsASK)
+                    bool optimalModel = true;
+                    foreach(Clause c in _kb.Clauses)
                     {
-                        if(clause.ElementsCount == 2 && clause.Elements[1].Name == _kb.Query)
+                        if(!c.Resolution)
                         {
-                            QueryResults++;
+                            optimalModel = false;
+                            break;
                         }
-                        else if (clause.ElementsCount == 3 && clause.Elements[2].Name == _kb.Query)
-                        {
-                            QueryResults++;
-                        }
-                        //Since this state results in true and contains the ASK statement
-                        
+                    }
+
+                    if(optimalModel)
+                    {
+                        ASKCount++;
                     }
                 }
-                else
-                {
-                    Debug.Write("F");
-                }
-
-                Debug.Write(Environment.NewLine);
             }
         }
 
-        public bool ProvideOutput(Clause clause)
+        private void RemoveFalseFacts()
         {
-            if (clause.IsFact)
+            //Any models where a fact is false is automatically not going to be an optimal model and therefore can be removed from the potential models of the truth table
+            //Speeds up processing time by removing models that are never going to result in an optimal model
+
+            for (int i = 0; i < _stateGrid.Count; i++)
             {
-                if (clause.Elements[0].State)
+                foreach (Element e in _stateGrid[i])
                 {
-                    return true;
+                    if ((!e.State) && _kb.Facts.Any(n1 => n1 == e.Name))
+                    {
+                        _stateGrid.RemoveAt(i);
+                    }
                 }
             }
-            else
+        }
+
+        private List<Element> ProvideUniqueElements(List<Clause> clauses)
+        {
+            List<Element> uniqueElements = new List<Element>();
+
+            foreach (Clause c in clauses) //KB's contain a list of clauses that we need to break down
             {
-                if (clause.ContainsImplication)
+                foreach (Element e in c.Elements) //Each of these clauses contains an element, each with a name in string format
                 {
-                    if (clause.ContainsConjunction)
+                    if (!uniqueElements.Any(e2 => e2.Name == e.Name)) //if an element with a specific name contained in the clauses isn't on the uniqueElements list, add it to that list.
                     {
-                        //The clause is a ^ b -> c
-                        return clause.CalculateConjunctionAndImplication();
+                        uniqueElements.Add(e);
                     }
-                    else
-                    {
-                        //The clause is a -> b
-                        return clause.CalculateImplication();
-                    }
-                }
-                else
-                {
-                    //The clause is a ^ b
-                    return clause.CalculateConjunction();
                 }
             }
 
-            return false; //unless explicitly stated we can assume the result is false
+            return uniqueElements;
         }
     }
 }
