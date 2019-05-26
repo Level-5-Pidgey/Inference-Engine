@@ -11,18 +11,21 @@ namespace InferenceEngine
         KnowledgeBase _kb;
         List<Element> InputChain = new List<Element>();
         HashSet<Element> OutputChain = new HashSet<Element>();
-        HashSet<Element> Facts = new HashSet<Element>();
+        List<Element> Facts = new List<Element>();
+        List<Clause> Clauses = new List<Clause>();
 
         public ForwardChaining(KnowledgeBase kb)
         {
             _kb = kb;
 
             Facts = GetFacts();
+            Clauses = _kb.Clauses;
+            InputChain = Facts;
         }
 
         public bool FindQuery()
         {
-            while (InputChain.Count == 0)
+            while (InputChain.Count != 0)
             {
                 Element currentElement = InputChain[0];
                 InputChain.RemoveAt(0);
@@ -34,11 +37,24 @@ namespace InferenceEngine
                     return true;
                 }
 
-                for (int i = 0; i < _kb.Clauses.Count; i++)
+                for (int i = 0; i < Clauses.Count; i++)
                 {
-                    for(int j = 0; j < _kb.Elements.Count; j++)
+                    for (int j = 0; j < _kb.Elements.Count; j++)
                     {
-                        if (currentElement.Name == _kb.Clauses[i].Elements[j].Name)
+                        if (currentElement.Name == Clauses[i].Elements[j].Name)
+                        {
+                            Clauses[i].Elements[j]
+                        }
+                    }
+
+                    foreach (Element e in Clauses.ElementAt(i))
+                }
+
+                foreach (Clause c in Clauses)
+                {
+                    foreach(Element e in c.Elements)
+                    {
+                        if (currentElement.Name == e.Name)
                         {
 
                         }
@@ -47,9 +63,9 @@ namespace InferenceEngine
             }
         }
 
-        public HashSet<Element> GetFacts()
+        public List<Element> GetFacts()
         {
-            HashSet<Element> factsList = new HashSet<Element>();
+            List<Element> factsList = new List<Element>();
 
             foreach(Clause c in _kb.Clauses)
             {

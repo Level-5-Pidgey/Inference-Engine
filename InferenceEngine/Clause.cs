@@ -54,16 +54,6 @@ namespace InferenceEngine
                 ContainsASK = true;
             }
 
-            if(clauseString.Contains("=>"))
-            {
-                ContainsImplication = true;
-            }
-
-            if(clauseString.Contains("&"))
-            {
-                ContainsConjunction = true;
-            }
-
             //More complex properties -- string form and elements
             StringForm = clauseString;
             Elements = FindElements(clauseString);
