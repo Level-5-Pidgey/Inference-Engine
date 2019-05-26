@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace InferenceEngine
 {
@@ -12,11 +13,11 @@ namespace InferenceEngine
             private set;
         } = new List<Clause>();
 
-        public List<string> Facts //Can represent as strings since we're only using them for comparison
+        public List<Element> Elements
         {
             get;
             private set;
-        } = new List<string>();
+        } = new List<Element>();
 
         public string Query
         {
@@ -28,7 +29,7 @@ namespace InferenceEngine
         {
             LoadFile(fileName);
 
-            EstablishFacts();
+            Elements = ProvideUniqueElements();
         }
 
         private void LoadFile(string fileName)
@@ -93,19 +94,22 @@ namespace InferenceEngine
             }
         }
 
-        private void EstablishFacts()
+        private List<Element> ProvideUniqueElements()
         {
-            //We want to find all clauses that are facts and make all elements that are facts be placed on a list
-            foreach (Clause c in Clauses)
+            List<Element> uniqueElements = new List<Element>();
+
+            foreach (Clause c in Clauses) //KB's contain a list of clauses that we need to break down
             {
-                if(c.IsFact)
+                foreach (Element e in c.Elements) //Each of these clauses contains an element, each with a name in string format
                 {
-                    if(!Facts.Contains(c.Elements[0].Name))
+                    if (!uniqueElements.Any(e2 => e2.Name == e.Name)) //if an element with a specific name contained in the clauses isn't on the uniqueElements list, add it to that list.
                     {
-                        Facts.Add(c.Elements[0].Name);
+                        uniqueElements.Add(e);
                     }
                 }
             }
+
+            return uniqueElements;
         }
     }
 }

@@ -9,7 +9,6 @@ namespace InferenceEngine
     public class TruthTable
     {
         private KnowledgeBase _kb;
-        private List<Element> _uniqueElements;
         private List<List<Element>> _stateGrid = new List<List<Element>>();
         private List<bool> _modelResult = new List<bool>();
 
@@ -40,7 +39,6 @@ namespace InferenceEngine
             //Counter for the number of states where the ASK section returns true
             ASKCount = 0;
             _kb = kb;
-            _uniqueElements = ProvideUniqueElements(kb.Clauses);
 
             PopulateTruthTable();
             EvaluateStates();
@@ -48,20 +46,20 @@ namespace InferenceEngine
 
         private void PopulateTruthTable()
         {
-            for(int i = 0; i < Math.Pow(2, _uniqueElements.Count); i++)
+            for (int i = 0; i < Math.Pow(2, _kb.Elements.Count); i++)
             {
                 //Add one new row for each element there is in the knowledgebase
                 _stateGrid.Add(new List<Element>());
                 _modelResult.Add(true); //To start, we can assume each outcome is true (and will change these to false later when evaluating states)
 
-                for (int j = 0; j < _uniqueElements.Count; j++)
+                for (int j = 0; j < _kb.Elements.Count; j++)
                 {
                     //Credit to Dhass on this CareerCup post on how to populate truth table grids easily:
                     //https://www.careercup.com/question?id=17632666
 
-                    int k = i & 1 << _uniqueElements.Count - 1 - j;
+                    int k = i & 1 << _kb.Elements.Count - 1 - j;
 
-                    _stateGrid[i].Add(new Element(_uniqueElements[j].Name, (k == 0 ? true : false)));
+                    _stateGrid[i].Add(new Element(_kb.Elements[j].Name, (k == 0 ? true : false)));
                 }
             }
         }
@@ -69,9 +67,9 @@ namespace InferenceEngine
         private void EvaluateStates()
         {
             //Check the state of all elements in each potential model
-            for (int i = 0; i < Math.Pow(2, _uniqueElements.Count); i++)
+            for (int i = 0; i < Math.Pow(2, _kb.Elements.Count); i++)
             {
-                for(int j = 0; j < _uniqueElements.Count; j++)
+                for(int j = 0; j < _kb.Elements.Count; j++)
                 {
                     if(_modelResult[i]) //This lets us skip models that we have evaluated to false
                     {
@@ -85,7 +83,7 @@ namespace InferenceEngine
                 }
             }
 
-            for (int i = 0; i < Math.Pow(2, _uniqueElements.Count); i++)
+            for (int i = 0; i < Math.Pow(2, _kb.Elements.Count); i++)
             {
                 if (_modelResult[i])
                 {
@@ -117,41 +115,6 @@ namespace InferenceEngine
                     }
                 }
             }
-        }
-
-        private void RemoveFalseFacts()
-        {
-            //Any models where a fact is false is automatically not going to be an optimal model and therefore can be removed from the potential models of the truth table
-            //Speeds up processing time by removing models that are never going to result in an optimal model
-
-            for (int i = 0; i < _stateGrid.Count; i++)
-            {
-                foreach (Element e in _stateGrid[i])
-                {
-                    if ((!e.State) && _kb.Facts.Any(n1 => n1 == e.Name))
-                    {
-                        _stateGrid.RemoveAt(i);
-                    }
-                }
-            }
-        }
-
-        private List<Element> ProvideUniqueElements(List<Clause> clauses)
-        {
-            List<Element> uniqueElements = new List<Element>();
-
-            foreach (Clause c in clauses) //KB's contain a list of clauses that we need to break down
-            {
-                foreach (Element e in c.Elements) //Each of these clauses contains an element, each with a name in string format
-                {
-                    if (!uniqueElements.Any(e2 => e2.Name == e.Name)) //if an element with a specific name contained in the clauses isn't on the uniqueElements list, add it to that list.
-                    {
-                        uniqueElements.Add(e);
-                    }
-                }
-            }
-
-            return uniqueElements;
         }
     }
 }

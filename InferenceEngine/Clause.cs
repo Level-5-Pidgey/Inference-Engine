@@ -27,19 +27,7 @@ namespace InferenceEngine
             private set;
         }
 
-        public bool ContainsConjunction
-        {
-            get;
-            private set;
-        }
-
         public bool IsFact
-        {
-            get;
-            private set;
-        }
-
-        public bool ContainsImplication
         {
             get;
             private set;

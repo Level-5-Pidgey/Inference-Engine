@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Clause.cs" />
     <Compile Include="Element.cs" />
+    <Compile Include="ForwardChaining.cs" />
     <Compile Include="KnowledgeBase.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
