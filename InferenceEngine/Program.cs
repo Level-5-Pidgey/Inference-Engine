@@ -81,8 +81,8 @@ namespace InferenceEngine
                         Console.WriteLine("");
 
                         var algorithmTimer = new Stopwatch();
-                        TruthTable tt = new TruthTable(fKB);
                         algorithmTimer.Start();
+                        TruthTable tt = new TruthTable(fKB);
                         Console.WriteLine(tt.OutputQueryResult());
                         algorithmTimer.Stop();
 

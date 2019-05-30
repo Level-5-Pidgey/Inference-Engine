@@ -59,7 +59,7 @@ namespace InferenceEngine
 
                     int k = i & 1 << fKB.ElementsCount - 1 - j;
 
-                    fStateGrid[i].Add(new Element(fKB.Elements[j].Name, k == 0 ? true : false));
+                    fStateGrid[i].Add(new Element(fKB.Elements[j].Name, (k == 0 ? true : false)));
                 }
             }
         }
@@ -83,7 +83,7 @@ namespace InferenceEngine
                 }
             }
 
-            for (int i = 0; i < Math.Pow(2, fKB.Elements.Count); i++)
+            for (int i = 0; i < Math.Pow(2, fKB.ElementsCount); i++)
             {
                 if (fModelResult[i])
                 {

@@ -56,7 +56,7 @@ namespace InferenceEngine
                         {
                             if (!fClauses[i].Elements[j].State) //Skip elements marked as true
                             {
-                                if (lCurrentElement.Name == fClauses[i].Elements[j].Name)
+                                if (lCurrentElement.Equals(fClauses[i].Elements[j]))
                                 {
                                     fClauses[i].Elements[j].State = true;
                                 }

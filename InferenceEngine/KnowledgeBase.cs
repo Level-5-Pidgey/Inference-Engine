@@ -33,6 +33,14 @@ namespace InferenceEngine
             }
         }
 
+        public int ClauseCount
+        {
+            get
+            {
+                return Clauses.Count();
+            }
+        }
+
         public KnowledgeBase(string aFileName)
         {
             LoadFile(aFileName);

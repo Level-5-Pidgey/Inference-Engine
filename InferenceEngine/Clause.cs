@@ -116,7 +116,7 @@ namespace InferenceEngine
             {
                 foreach (Element e2 in Elements)
                 {
-                    if(e1 == e2)
+                    if(e1.Equals(e2))
                     {
                         e2.State = e1.State;
                     }
