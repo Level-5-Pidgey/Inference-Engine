@@ -9,7 +9,6 @@ namespace InferenceEngine
         {
             //Variable assignment
             KnowledgeBase kb;
-            TruthTable testTruth;
 
             if (args.Length != 2)
             {
@@ -26,9 +25,9 @@ namespace InferenceEngine
             else
             {
                 kb = new KnowledgeBase(fileDir);
-                testTruth = new TruthTable(kb);
+                ForwardChaining forwardChain = new ForwardChaining(kb);
 
-                Console.WriteLine(testTruth.OutputQueryResult());
+                Console.WriteLine(forwardChain.OutputQuery());
             }
         }
     }

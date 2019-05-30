@@ -23,14 +23,22 @@ namespace InferenceEngine
 
         public int ElementsCount
         {
-            get;
-            private set;
+            get
+            {
+                return Elements.Count();
+            }
         }
 
         public bool IsFact
         {
             get;
             private set;
+        }
+
+        public bool SkipInChaining //Used for the purpose of FC/BC to delegate if this clause should be iterated over
+        {
+            get;
+            set;
         }
 
         public bool ContainsASK
@@ -58,10 +66,14 @@ namespace InferenceEngine
             StringForm = clauseString;
             Elements = FindElements(clauseString);
 
-            ElementsCount = Elements.Count(); //So that other methods don't need to use the .Count() method multiple times (increases performance theoretically)
             if (ElementsCount == 1)
             {
                 IsFact = true;
+                SkipInChaining = true;
+            }
+            else
+            {
+                SkipInChaining = false;
             }
         }
 
