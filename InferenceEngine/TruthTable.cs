@@ -18,6 +18,10 @@ namespace InferenceEngine
             private set;
         }
 
+        /// <summary>
+        /// Formats the ASKCount nicely to display to the user on console
+        /// </summary>
+        /// <returns>String containing the amount of times the ASK Query element can result true in all possible models.</returns>
         public string OutputQueryResult()
         {
             string result;
@@ -44,6 +48,10 @@ namespace InferenceEngine
             EvaluateStates();
         }
 
+        /// <summary>
+        /// Populates the truth table with every possible state of the elements in the KB
+        /// O(2^n) time complexity(?) : the test KB has a 2048 (2^11) different possible states for the elements
+        /// </summary>
         private void PopulateTruthTable()
         {
             for (int i = 0; i < Math.Pow(2, fKB.ElementsCount); i++)
@@ -64,6 +72,9 @@ namespace InferenceEngine
             }
         }
 
+        /// <summary>
+        /// Evaluates the generated states of the elements in the KB alters and how many models result in the ASK Query element being true
+        /// </summary>
         private void EvaluateStates()
         {
             //Check the state of all elements in each potential model
@@ -88,15 +99,15 @@ namespace InferenceEngine
                 if (fModelResult[i])
                 {
                     //Within this model we want to:
-                    //Set the elements within the clause to match the states in the current model
-                    //Then, evaluate the clause and see if it results in a truth
-                    //if the result is false, change _modelResult[i] to false also
-                    //After iterating through the list, any models where the query element is true can be left true
+                    //(1) Set the elements within the clause to match the states in the current model
+                    //(2) Then, evaluate the clause and see if it results in a truth
+                    //(3) if the result is false, then this clause is not part of the optimal model
+                    //(4) After iterating through the list, any models where the query element is true can be left true
 
                     foreach (Clause c in fKB.Clauses)
                     {
-                        c.MatchStates(fStateGrid[i]);
-                        c.ResolveClauseStates();
+                        c.MatchStates(fStateGrid[i]); //(1) Set the elements within the clause to match the states in the current model
+                        c.ResolveClauseStates(); //(2) Then, evaluate the clause and see if it results in a truth
                     }
 
                     bool lOptimalModel = true;
@@ -104,12 +115,13 @@ namespace InferenceEngine
                     {
                         if(!c.Resolution)
                         {
-                            lOptimalModel = false;
+                            lOptimalModel = false; //(3) if the result is false, then this clause is not part of the optimal model
                             break;
                         }
+                        //(4) After iterating through the list, any models where the query element is true can be left true
                     }
 
-                    if(lOptimalModel)
+                    if (lOptimalModel)
                     {
                         ASKCount++;
                     }

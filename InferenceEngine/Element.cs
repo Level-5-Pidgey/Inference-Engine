@@ -33,6 +33,9 @@ namespace InferenceEngine
             State = aState;
         }
 
+        /// <summary>
+        /// Inverts the current state of the element.
+        /// </summary>
         public void SetState()
         {
             State = !State;

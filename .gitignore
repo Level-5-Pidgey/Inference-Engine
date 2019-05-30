@@ -259,3 +259,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/iengine.exe
+/test_HornKB.txt
+/test_2.txt
+/test_simple.txt
+/test_simple2.txt

@@ -48,6 +48,10 @@ namespace InferenceEngine
             Elements = ProvideUniqueElements();
         }
 
+        /// <summary>
+        /// Loads a file from the given fileName and creates a new knowledgebase.
+        /// </summary>
+        /// <param name="fileName">String form (with no filetype identifier) for the file name to open and load from.</param>
         private void LoadFile(string fileName)
         {
             //Example file knowledge base + query:
@@ -111,6 +115,10 @@ namespace InferenceEngine
             }
         }
 
+        /// <summary>
+        /// Creates a list of all unique elements within a knowledgebase.
+        /// </summary>
+        /// <returns>Returns a list of all unique elements within the KB.</returns>
         private List<Element> ProvideUniqueElements()
         {
             List<Element> lUniqueElements = new List<Element>();

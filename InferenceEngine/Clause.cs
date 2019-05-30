@@ -77,6 +77,11 @@ namespace InferenceEngine
             }
         }
 
+        /// <summary>
+        /// Uses string splitting and regex to find all of the elements within a string-form clause and create a list of elements.
+        /// </summary>
+        /// <param name="aClause">The clause in string form to find elements from.</param>
+        /// <returns>Returns a list of elements with their states set to false.</returns>
         private List<Element> FindElements(string aClause)
         {
             string[] lDividedClauses = Regex.Split(aClause, "=>");
@@ -110,6 +115,10 @@ namespace InferenceEngine
             return lResult;
         }
 
+        /// <summary>
+        /// Ensures all states within the given list are the same on both sides.
+        /// </summary>
+        /// <param name="aElements">List of elements to match the states of.</param>
         public void MatchStates(List<Element> aElements)
         {
             foreach (Element e1 in aElements)
@@ -124,6 +133,9 @@ namespace InferenceEngine
             }
         }
 
+        /// <summary>
+        /// Evaluates if the clause, based on the current states of all elements within the clause, resolves to be true.
+        /// </summary>
         public void ResolveClauseStates()
         {
             //In the case of this assignment, Horn clauses only contain implications (=>) and conjunctions (&). Therefore, if all left-allocated elements are true, the right must be true for the result to be true.
@@ -153,6 +165,11 @@ namespace InferenceEngine
             }
         }
 
+        /// <summary>
+        /// Checks if all elements have their states set to true within a given list. Used for the resolution process of states.
+        /// </summary>
+        /// <param name="elements">List of elements to check if all have their states set to true.</param>
+        /// <returns>Returns true if all elements in the list have true states</returns>
         private bool IsAllTrue(List<Element> elements)
         {
             bool result = true;
