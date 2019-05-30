@@ -42,6 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BackwardsChaining.cs" />
+    <Compile Include="Chaining.cs" />
     <Compile Include="Clause.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="ForwardChaining.cs" />

@@ -6,104 +6,76 @@ using System.Threading.Tasks;
 
 namespace InferenceEngine
 {
-    public class ForwardChaining
+    public class ForwardChaining : Chaining
     {
-        KnowledgeBase _kb;
-        List<Element> InputChain = new List<Element>();
-        List<Element> OutputChain = new List<Element>();
-        List<Element> Facts = new List<Element>();
-        List<Clause> Clauses = new List<Clause>();
+        private List<Clause> fClauses = new List<Clause>();
 
-        public ForwardChaining(KnowledgeBase kb)
+        public ForwardChaining(KnowledgeBase aKB) : base(aKB)
         {
-            _kb = kb;
-
-            Facts = GetFacts();
-            Clauses = _kb.Clauses;
-            InputChain = Facts;
+            fInputChain = GetFacts();
+            fClauses = fKB.Clauses;
         }
 
-        private bool CanFindQuery()
+        protected override bool CanFindQuery()
         {
-            while (InputChain.Count != 0)
+            Element lCurrentElement;
+
+            foreach (Clause c in fClauses)
             {
-                Element currentElement = InputChain[0];
-                InputChain.RemoveAt(0);
+                if (c.IsFact)
+                {
+                    c.SkipInChaining = true;
+                }
 
-                OutputChain.Add(currentElement);
+                foreach (Element e in c.Elements)
+                {
+                    if (e.IsImplied)
+                    {
+                        e.State = true;
+                    }
+                }
+            }
 
-                if (currentElement.Name == _kb.Query)
+            while (fInputChain.Count != 0)
+            {
+                lCurrentElement = fInputChain[0];
+                fInputChain.RemoveAt(0);
+
+                fOutputChain.Add(lCurrentElement);
+
+                if (lCurrentElement.Name == fKB.Query)
                 {
                     return true;
                 }
 
-                foreach (Clause c in Clauses)
+                for (int i = 0; i < fClauses.Count; i++)
                 {
-                    if (!c.SkipInChaining && c.ElementsCount > 1)
+                    if (!fClauses[i].SkipInChaining)
                     {
-                        foreach (Element e in c.Elements)
+                        for (int j = 0; j < fClauses[i].ElementsCount; j++)
                         {
-                            if ((currentElement.Name == e.Name) && !e.State)
+                            if (!fClauses[i].Elements[j].State) //Skip elements marked as true
                             {
-                                e.SetState(); //If the element's state is true, it's already been addressed and doesn't need to be anymore
+                                if (lCurrentElement.Name == fClauses[i].Elements[j].Name)
+                                {
+                                    fClauses[i].Elements[j].State = true;
+                                }
                             }
                         }
-                    }
-                    else if (!c.SkipInChaining)
-                    {
-                        InputChain.Add(c.Elements[0]);
-                        c.SkipInChaining = true;
-                    }
-                    else
-                    {
-                        c.SkipInChaining = true; //This clause is just a fact, and since we have already added all facts to the InputChain we can disregard it
+
+                        if (!fClauses[i].SkipInChaining)
+                        {
+                            if (fClauses[i].Elements.All(e => e.State))
+                            {
+                                fInputChain.Add(fClauses[i].Elements.Find(e => e.IsImplied));
+                                fClauses[i].SkipInChaining = true;
+                            }
+                        }
                     }
                 }
             }
 
             return false; //We've exhausted all possible elements, so there is no way to reach the query element
-        }
-
-        public string OutputQuery()
-        {
-            string output;
-            if (CanFindQuery())
-            {
-                output = "YES (" + _kb.Query + "): ";
-
-                for (int i = 0; i < OutputChain.Count; i++)
-                {
-                    output += OutputChain[i].Name;
-
-                    if (i < OutputChain.Count - 1) //Add a comma after the element name, except if it's the last element
-                    {
-                        output += ", "; 
-                    }
-                }
-
-                output += ";"; //Add a semicolon at the end to signify that it's the end of the output chain
-            }
-            else
-            {
-                output = "NO (" + _kb.Query + ");";
-            }
-
-            return output;
-        }
-
-        private List<Element> GetFacts()
-        {
-            List<Element> factsList = new List<Element>();
-
-            foreach(Clause c in _kb.Clauses)
-            {
-                if(c.IsFact)
-                {
-                    factsList.Add(c.Elements[0]);
-                }
-            }
-
-            return factsList;
         }
     }
 }

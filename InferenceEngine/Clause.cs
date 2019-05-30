@@ -53,18 +53,18 @@ namespace InferenceEngine
             set;
         }
 
-        public Clause(string clauseString, string query)
+        public Clause(string aClauseString, string aQuery)
         {
             //Format the object within constructor
             //Setting properties of the object
-            if (clauseString.Contains(query))
+            if (aClauseString.Contains(aQuery))
             {
                 ContainsASK = true;
             }
 
             //More complex properties -- string form and elements
-            StringForm = clauseString;
-            Elements = FindElements(clauseString);
+            StringForm = aClauseString;
+            Elements = FindElements(aClauseString);
 
             if (ElementsCount == 1)
             {
@@ -77,46 +77,46 @@ namespace InferenceEngine
             }
         }
 
-        private List<Element> FindElements(string clause)
+        private List<Element> FindElements(string aClause)
         {
-            string[] dividedclauses = Regex.Split(clause, "=>");
-            List<Element> result = new List<Element>();
+            string[] lDividedClauses = Regex.Split(aClause, "=>");
+            List<Element> lResult = new List<Element>();
 
             //Go through all of the strings passed to the method to start comparison
-            foreach (string s in dividedclauses)
+            foreach (string s in lDividedClauses)
             {
                 //Check if this statement contains one or two elements
                 if (s.Contains("&"))
                 {
-                    string[] conditionals = s.Split('&');
-                    foreach (string c in conditionals)
+                    string[] fConditionals = s.Split('&');
+                    foreach (string c in fConditionals)
                     {
-                        result.Add(new Element(c));
+                        lResult.Add(new Element(c));
                     }
                 }
                 else
                 {
-                    if(dividedclauses.Last() == s)
+                    if(lDividedClauses.Last() == s)
                     {
-                        result.Add(new Element(s, false, true));
+                        lResult.Add(new Element(s, false, true));
                     }
                     else
                     {
-                        result.Add(new Element(s));
+                        lResult.Add(new Element(s));
                     }
                 }
             }
 
-            return result;
+            return lResult;
         }
 
-        public void MatchStates(List<Element> elements)
+        public void MatchStates(List<Element> aElements)
         {
-            foreach (Element e1 in elements)
+            foreach (Element e1 in aElements)
             {
                 foreach (Element e2 in Elements)
                 {
-                    if(e1.Name == e2.Name)
+                    if(e1 == e2)
                     {
                         e2.State = e1.State;
                     }

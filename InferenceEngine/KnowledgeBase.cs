@@ -25,9 +25,17 @@ namespace InferenceEngine
             private set;
         }
 
-        public KnowledgeBase(string fileName)
+        public int ElementsCount
         {
-            LoadFile(fileName);
+            get
+            {
+                return Elements.Count();
+            }
+        }
+
+        public KnowledgeBase(string aFileName)
+        {
+            LoadFile(aFileName);
 
             Elements = ProvideUniqueElements();
         }
@@ -43,40 +51,41 @@ namespace InferenceEngine
             StreamReader reader = new StreamReader(fileName);
             try
             {
-                string line = reader.ReadLine();
-                string clauseLine = "";
+                string lLine = reader.ReadLine();
+                string lClauseLine = "";
+
                 //read the file in order, line by line
                 //all files must start with TELL, signalling the knowledgebase.
-                if (line != "TELL")
+                if (lLine != "TELL")
                 {
                     throw new FormatException("File is not formatted correctly. Please check the file you are using, consult the README and try again.");
                 }
                 else
                 {
-                    line = reader.ReadLine();
-                    line = line.Replace(" ", string.Empty);
-                    if (line.EndsWith(";"))
+                    lLine = reader.ReadLine();
+                    lLine = lLine.Replace(" ", string.Empty);
+                    if (lLine.EndsWith(";"))
                     {
-                        line = line.Remove(line.Length - 1); //Remove the final ; at the end of the list of clauses/facts 
+                        lLine = lLine.Remove(lLine.Length - 1); //Remove the final ; at the end of the list of clauses/facts 
                     }
-                    clauseLine = line; //Save this data and move on
+                    lClauseLine = lLine; //Save this data and move on
                 }
 
                 //Now the "TELL" section should have been completed, we can do the "ASK" section
-                line = reader.ReadLine();
-                if (line != "ASK")
+                lLine = reader.ReadLine();
+                if (lLine != "ASK")
                 {
                     throw new FormatException("File is not formatted correctly. Please check the file you are using, consult the README and try again.");
                 }
                 else
                 {
                     List<string> clauses = new List<string>();
-                    line = reader.ReadLine();
+                    lLine = reader.ReadLine();
 
-                    Query = line;
+                    Query = lLine;
 
                     //now we know what the query is we can convert the string clauses into objects
-                    string[] splitString = clauseLine.Split(';');
+                    string[] splitString = lClauseLine.Split(';');
                     foreach (string s in splitString)
                     {
                         clauses.Add(s);
@@ -96,20 +105,20 @@ namespace InferenceEngine
 
         private List<Element> ProvideUniqueElements()
         {
-            List<Element> uniqueElements = new List<Element>();
+            List<Element> lUniqueElements = new List<Element>();
 
             foreach (Clause c in Clauses) //KB's contain a list of clauses that we need to break down
             {
                 foreach (Element e in c.Elements) //Each of these clauses contains an element, each with a name in string format
                 {
-                    if (!uniqueElements.Any(e2 => e2.Name == e.Name)) //if an element with a specific name contained in the clauses isn't on the uniqueElements list, add it to that list.
+                    if (!lUniqueElements.Any(e2 => e2.Name == e.Name)) //if an element with a specific name contained in the clauses isn't on the uniqueElements list, add it to that list.
                     {
-                        uniqueElements.Add(e);
+                        lUniqueElements.Add(e);
                     }
                 }
             }
 
-            return uniqueElements;
+            return lUniqueElements;
         }
     }
 }
